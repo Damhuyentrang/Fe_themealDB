@@ -4,7 +4,7 @@ export interface Product {
   image?: string;
   availableQty: number;
   category?: string;
-  brand?: string;
+  variants?: string[];
   createdAt: string;
   sku?: string;
   status: 'active' | 'inactive';

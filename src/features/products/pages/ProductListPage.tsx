@@ -6,10 +6,12 @@ import MoreFiltersDrawer from '../components/MoreFiltersDrawer';
 
 // Mock data — replace with React Query + API later
 const MOCK_PRODUCTS: Product[] = [
-  { id: '1', name: 'nhẫn', availableQty: 0, createdAt: '2026-06-03', status: 'active' },
-  { id: '2', name: 'Cân', availableQty: 50, createdAt: '2026-06-03', status: 'active' },
-  { id: '3', name: 'Vòng tay', availableQty: 96, createdAt: '2026-06-03', status: 'active' },
-  { id: '4', name: 'The Ring', availableQty: 0, createdAt: '2026-06-03', status: 'active' },
+  { id: '1', name: 'Vòng H59', availableQty: 10, category: 'Vòng', variants: ['vàng', 'bạc', 'đỏ'], createdAt: '2026-06-09', status: 'active' },
+  { id: '2', name: 'ring R10', availableQty: 30, category: 'Nhẫn', variants: ['to', 'nhỏ'], createdAt: '2026-06-08', status: 'active' },
+  { id: '3', name: 'nhẫn', availableQty: 0, category: 'Nhẫn', createdAt: '2026-06-03', status: 'active' },
+  { id: '4', name: 'Cân', availableQty: 49, category: 'Cân', createdAt: '2026-06-03', status: 'active' },
+  { id: '5', name: 'Vòng tay', availableQty: 95, category: 'Vòng', variants: ['xanh', 'đỏ', 'vàng', 'trắng'], createdAt: '2026-06-03', status: 'active' },
+  { id: '6', name: 'The Ring', availableQty: 0, category: 'Nhẫn', createdAt: '2026-06-03', status: 'active' },
 ];
 
 function ProductImagePlaceholder() {
@@ -132,7 +134,7 @@ export default function ProductListPage() {
               <th className="px-4 py-3 text-left">Sản phẩm</th>
               <th className="px-4 py-3 text-center">Có thể bán</th>
               <th className="px-4 py-3 text-left">Loại</th>
-              <th className="px-4 py-3 text-left">Nhãn hiệu</th>
+              <th className="px-4 py-3 text-left">Danh mục</th>
               <th className="px-4 py-3 text-left">Ngày khởi tạo</th>
             </tr>
           </thead>
@@ -158,8 +160,10 @@ export default function ProductListPage() {
                   </div>
                 </td>
                 <td className="px-4 py-3 text-center text-gray-700">{product.availableQty}</td>
+                <td className="px-4 py-3 text-gray-500">
+                  {product.variants?.join(', ') ?? ''}
+                </td>
                 <td className="px-4 py-3 text-gray-500">{product.category ?? ''}</td>
-                <td className="px-4 py-3 text-gray-500">{product.brand ?? ''}</td>
                 <td className="px-4 py-3 text-gray-600">{formatDate(product.createdAt)}</td>
               </tr>
             ))}

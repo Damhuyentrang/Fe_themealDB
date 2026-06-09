@@ -27,8 +27,10 @@ import SupplierListPage from '../features/inventory/pages/SupplierListPage';
 import CreateSupplierPage from '../features/inventory/pages/CreateSupplierPage';
 import PurchaseReturnListPage from '../features/inventory/pages/PurchaseReturnListPage';
 import PromotionsPage from '../features/promotions/pages/PromotionsPage';
+import PriceListPage from '../features/products/pages/PriceListPage';
 import CustomerListPage from '../features/customers/pages/CustomerListPage';
 import ShippingOverviewPage from '../features/shipping/pages/ShippingOverviewPage';
+import WaybillListPage from '../features/shipping/pages/WaybillListPage';
 import ReportsListPage from '../features/reports/pages/ReportsListPage';
 import RevenueReportPage from '../features/reports/pages/RevenueReportPage';
 import SettingsPage from '../features/settings/pages/SettingsPage';
@@ -61,10 +63,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.PRODUCT_CREATE, element: <CreateProductPage /> },
       { path: ROUTES.PRODUCT_CATEGORIES, element: <ProductCategoriesPage /> },
       { path: '/products/categories/create', element: <CreateCategoryPage /> },
-      {
-        path: ROUTES.PRICE_LISTS,
-        element: <div className="p-4 text-gray-500">Bảng giá — coming soon</div>,
-      },
+      { path: ROUTES.PRICE_LISTS, element: <PriceListPage /> },
       { path: ROUTES.CUSTOMERS,       element: <CustomerListPage /> },
       { path: ROUTES.CUSTOMER_GROUPS, element: <div className="p-4 text-gray-500">Nhóm khách hàng — coming soon</div> },
       { path: ROUTES.INVENTORY, element: <InventoryPage /> },
@@ -76,7 +75,7 @@ export const router = createBrowserRouter([
       { path: '/inventory/suppliers/create', element: <CreateSupplierPage /> },
       { path: '/inventory/suppliers/:id', element: <div className="p-4 text-gray-500">Chi tiết nhà cung cấp — coming soon</div> },
       { path: ROUTES.SHIPPING,         element: <ShippingOverviewPage /> },
-      { path: ROUTES.SHIPPING_WAYBILLS, element: <div className="p-4 text-gray-500">Vận đơn — coming soon</div> },
+      { path: ROUTES.SHIPPING_WAYBILLS, element: <WaybillListPage /> },
       { path: ROUTES.PROMOTIONS, element: <PromotionsPage /> },
       { path: ROUTES.REPORTS,        element: <ReportOverviewPage /> },
       { path: ROUTES.REPORTS_LIST,   element: <ReportsListPage /> },

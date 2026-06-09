@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import DraftMoreFiltersDrawer from '../components/DraftMoreFiltersDrawer';
 
 type DraftStatus = 'incomplete' | 'complete';
 
@@ -30,6 +31,7 @@ function formatDate(iso: string) {
 export default function DraftOrderListPage() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
 
   const filtered = MOCK_DRAFTS.filter(
     (d) =>
@@ -85,7 +87,10 @@ export default function DraftOrderListPage() {
           <button className="text-sm border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 whitespace-nowrap">
             Ngày tạo ▾
           </button>
-          <button className="text-sm border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 whitespace-nowrap">
+          <button
+            onClick={() => setMoreFiltersOpen(true)}
+            className="text-sm border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 whitespace-nowrap"
+          >
             🔍 Bộ lọc khác
           </button>
           <button className="text-sm border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 whitespace-nowrap">
@@ -173,6 +178,13 @@ export default function DraftOrderListPage() {
           </div>
         </div>
       </div>
+
+      <DraftMoreFiltersDrawer
+        open={moreFiltersOpen}
+        onClose={() => setMoreFiltersOpen(false)}
+        onApply={() => {}}
+        onClear={() => {}}
+      />
     </div>
   );
 }

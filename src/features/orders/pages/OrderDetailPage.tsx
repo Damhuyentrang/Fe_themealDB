@@ -2,99 +2,145 @@ import { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ROUTES } from '../../../constants/routes';
 import InvoiceModal from '../components/InvoiceModal';
+import QRPaymentModal from '../components/QRPaymentModal';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
-interface HistoryItem {
-  time: string;
-  actor: string;
-  action: string;
-  expandable?: boolean;
+type PaymentStatus = 'paid' | 'unpaid';
+type OrderStatus   = 'pending' | 'processed' | 'completed';
+
+interface MockOrder {
+  id: string;
+  code: string;
+  paymentStatus: PaymentStatus;
+  orderStatus: OrderStatus;
+  source: { label: string; color: string };
+  shipping: {
+    branch: string;
+    method?: string;
+    fee?: number;
+    exportDate?: string;
+  };
+  products: { id: string; name: string; qty: number; price: number }[];
+  payment: { total: number; method?: string; paid?: number };
+  customer: {
+    name: string;
+    email: string;
+    phone: string | null;
+    totalSpent: number;
+    totalOrders: number;
+    lastOrder: string;
+    address: { name: string; phone: string | null; detail: string };
+  };
+  note: string | null;
+  additionalInfo: { branch: string; staff: string | null };
+  conversion?: { page: string };
+  history: { time: string; actor: string; action: string; expandable?: boolean }[];
+  timeline: { key: string; label: string; time: string | null; done: boolean }[];
 }
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
+// ── Mock data ──────────────────────────────────────────────────────────────────
 
-const MOCK_ORDER = {
-  id: '1001',
-  code: '#1001',
-  paymentStatus: 'paid' as const,
-  orderStatus: 'completed' as const,
-  createdAt: '03/06/2026 13:42',
-  source: 'Admin',
-  customer: {
-    name: 'Đặng Hiếu',
-    email: 'hieuvandang1306@gmail.com',
-    phone: null as string | null,
-    totalSpent: 2_000_000,
-    totalOrders: 2,
-    lastOrder: '#1002',
-    customerGroup: null as string | null,
-    address: {
-      name: 'Đặng Hiêu',
-      phone: '0123456662',
-      detail: '2, Xã Vĩnh Phú Đông, Huyện Phước Long, Bạc Liêu, Vietnam',
+const MOCK_ORDERS: Record<string, MockOrder> = {
+  '1001': {
+    id: '1001',
+    code: '#1001',
+    paymentStatus: 'paid',
+    orderStatus: 'completed',
+    source: { label: 'Admin', color: 'bg-orange-400' },
+    shipping: {
+      branch: 'Cửa hàng chính',
+      method: 'Nhận tại cửa hàng',
+      exportDate: '03/06/2026 13:42',
     },
+    products: [{ id: '1', name: 'Vòng tay', qty: 1, price: 2_000_000 }],
+    payment: { total: 2_000_000, method: 'Tiền mặt', paid: 2_000_000 },
+    customer: {
+      name: 'Đặng Hiếu',
+      email: 'hieuvandang1306@gmail.com',
+      phone: null,
+      totalSpent: 2_000_000,
+      totalOrders: 2,
+      lastOrder: '#1002',
+      address: { name: 'Đặng Hiêu', phone: '0123456662', detail: '2, Xã Vĩnh Phú Đông, Huyện Phước Long, Bạc Liêu, Vietnam' },
+    },
+    note: null,
+    additionalInfo: { branch: 'Cửa hàng chính', staff: 'Trang Đầm' },
+    history: [
+      { time: '13:42', actor: 'Trang Đầm', action: 'Đã thực hiện xuất hàng cho 1 sản phẩm tại chi nhánh Cửa hàng chính', expandable: true },
+      { time: '13:42', actor: 'Trang Đầm', action: 'Đã xử lý giao hàng cho 1 sản phẩm tại chi nhánh Cửa hàng chính', expandable: true },
+      { time: '13:42', actor: 'Trang Đầm', action: 'Đã xác nhận khoản thanh toán 2,000,000 VND thông qua Tiền mặt' },
+      { time: '13:42', actor: 'Sapo',      action: 'Email xác nhận đơn hàng đã được gửi tới khách hàng' },
+      { time: '13:42', actor: 'Trang Đầm', action: 'Đã xác nhận đơn hàng từ Đặng Hiếu' },
+      { time: '13:42', actor: 'Trang Đầm', action: 'Đã tạo mới đơn hàng' },
+    ],
+    timeline: [
+      { key: 'order',    label: 'Đặt hàng',     time: '03/06/2026 13:42', done: true },
+      { key: 'confirm',  label: 'Xác nhận',      time: '03/06/2026 13:42', done: true },
+      { key: 'pickup',   label: 'DTVC lấy hàng', time: null,               done: false },
+      { key: 'delivery', label: 'Giao hàng',     time: '03/06/2026 13:42', done: true },
+      { key: 'done',     label: 'Hoàn thành',    time: '03/06/2026 13:42', done: true },
+    ],
   },
-  shipping: {
-    branch: 'Cửa hàng chính',
-    method: 'Nhận tại cửa hàng',
-    exportDate: '03/06/2026 13:42',
+  '1002': {
+    id: '1002',
+    code: '#1002',
+    paymentStatus: 'unpaid',
+    orderStatus: 'pending',
+    source: { label: 'Website', color: 'bg-green-500' },
+    shipping: { branch: 'Cửa hàng chính', method: 'Giao hàng tận nơi', fee: 40_000 },
+    products: [{ id: '1', name: 'Vòng tay', qty: 1, price: 2_000_000 }],
+    payment: { total: 2_000_000 },
+    customer: {
+      name: 'Đặng Hiếu',
+      email: 'hieuvandang1306@gmail.com',
+      phone: null,
+      totalSpent: 0,
+      totalOrders: 2,
+      lastOrder: '#1002',
+      address: { name: 'Dang Hieu', phone: null, detail: 'Phường Phú Thịnh, Thị xã Sơn Tây, Hà Nội, Vietnam' },
+    },
+    note: null,
+    additionalInfo: { branch: 'Cửa hàng chính', staff: null },
+    conversion: { page: '/the-ring' },
+    history: [
+      { time: '13:46', actor: 'Sapo',       action: 'Khoản thanh toán 2,040,000 VND đang chờ xử lý thông qua Thu hộ (COD)', expandable: true },
+      { time: '13:46', actor: 'Sapo',       action: 'Email xác nhận đơn hàng đã được gửi tới khách hàng', expandable: true },
+      { time: '13:46', actor: 'Sapo',       action: 'Đã xác nhận đơn hàng từ Đặng Hiếu' },
+      { time: '13:46', actor: 'Sapo',       action: 'Đặng Hiếu đặt đơn hàng trên Website' },
+    ],
+    timeline: [
+      { key: 'order',    label: 'Đặt hàng',     time: '03/06/2026 13:46', done: true },
+      { key: 'confirm',  label: 'Xác nhận',      time: '03/06/2026 13:46', done: true },
+      { key: 'pickup',   label: 'DTVC lấy hàng', time: null,               done: false },
+      { key: 'delivery', label: 'Giao hàng',     time: null,               done: false },
+      { key: 'done',     label: 'Hoàn thành',    time: null,               done: false },
+    ],
   },
-  products: [
-    { id: '1', name: 'Vòng tay', image: null, qty: 1, price: 2_000_000 },
-  ],
-  payment: {
-    total: 2_000_000,
-    method: 'Tiền mặt',
-    paid: 2_000_000,
-  },
-  note: null as string | null,
-  additionalInfo: {
-    branch: 'Cửa hàng chính',
-    staff: 'Trang Đầm',
-  },
-  history: [
-    { time: '13:42', actor: 'Trang Đầm', action: 'Đã thực hiện xuất hàng cho 1 sản phẩm tại chi nhánh Cửa hàng chính', expandable: true },
-    { time: '13:42', actor: 'Trang Đầm', action: 'Đã xử lý giao hàng cho 1 sản phẩm tại chi nhánh Cửa hàng chính', expandable: true },
-    { time: '13:42', actor: 'Trang Đầm', action: 'Đã xác nhận khoản thanh toán 2,000,000 VND thông qua Tiền mặt' },
-    { time: '13:42', actor: 'Sapo', action: 'Đơn hàng được lưu trữ' },
-    { time: '13:42', actor: 'Sapo', action: 'Email xác nhận đơn hàng đã được gửi tới khách hàng' },
-    { time: '13:42', actor: 'Trang Đầm', action: 'Đã xác nhận đơn hàng từ Đặng Hiếu' },
-    { time: '13:42', actor: 'Trang Đầm', action: 'Đã tạo mới đơn hàng' },
-  ] as HistoryItem[],
 };
-
-const TIMELINE_STEPS = [
-  { key: 'order',    label: 'Đặt hàng',      time: '03/06/2026 13:42', done: true },
-  { key: 'confirm',  label: 'Xác nhận',       time: '03/06/2026 13:42', done: true },
-  { key: 'pickup',   label: 'DTVC lấy hàng',  time: null,               done: false },
-  { key: 'delivery', label: 'Giao hàng',      time: '03/06/2026 13:42', done: true },
-  { key: 'done',     label: 'Hoàn thành',     time: '03/06/2026 13:42', done: true },
-];
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
-function StatusBadge({ type }: { type: 'paid' | 'processed' | 'archived' }) {
-  const cfg = {
-    paid:      { label: 'Đã thanh toán', className: 'bg-green-100 text-green-700 border border-green-300' },
-    processed: { label: 'Đã xử lý',      className: 'bg-gray-100 text-gray-600 border border-gray-300' },
-    archived:  { label: 'Lưu trữ',       className: 'bg-white text-gray-500 border border-gray-300' },
-  }[type];
+function StatusBadge({ status }: { status: 'paid' | 'unpaid' | 'pending' | 'processed' | 'completed' | 'archived' }) {
+  const cfg: Record<string, { label: string; dot: string; className: string }> = {
+    paid:      { label: 'Đã thanh toán',  dot: 'bg-green-500',  className: 'bg-green-50 text-green-700 border border-green-300' },
+    unpaid:    { label: 'Chưa thanh toán', dot: 'bg-orange-400', className: 'bg-orange-50 text-orange-600 border border-orange-300' },
+    pending:   { label: 'Chưa xử lý',     dot: 'bg-orange-400', className: 'bg-orange-50 text-orange-600 border border-orange-300' },
+    processed: { label: 'Đã xử lý',       dot: 'bg-gray-400',   className: 'bg-gray-100 text-gray-600 border border-gray-300' },
+    completed: { label: 'Hoàn thành',     dot: 'bg-green-500',  className: 'bg-green-50 text-green-700 border border-green-300' },
+    archived:  { label: 'Lưu trữ',        dot: 'bg-gray-300',   className: 'bg-white text-gray-500 border border-gray-300' },
+  };
+  const c = cfg[status];
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${cfg.className}`}>
-      {type === 'paid' && <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5" />}
-      {type === 'processed' && <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5" />}
-      {cfg.label}
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${c.className}`}>
+      <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${c.dot}`} />
+      {c.label}
     </span>
   );
 }
 
 function SectionCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}>
-      {children}
-    </div>
-  );
+  return <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}>{children}</div>;
 }
 
 function SidebarSection({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
@@ -113,15 +159,21 @@ function EditIcon() {
   return <button className="text-gray-400 hover:text-gray-600 text-sm">✎</button>;
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+function PendingIcon() {
+  return <span className="text-orange-400 text-base">⊙</span>;
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const orderId = id ?? '1001';
-  const order = MOCK_ORDER;
+  const orderId = id ?? '1002';
+  const order = MOCK_ORDERS[orderId] ?? MOCK_ORDERS['1002'];
+
   const [expandedHistory, setExpandedHistory] = useState<Set<number>>(new Set());
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
   const [showAllAddress, setShowAllAddress] = useState(false);
 
   const toggleHistory = (i: number) =>
@@ -130,6 +182,11 @@ export default function OrderDetailPage() {
       next.has(i) ? next.delete(i) : next.add(i);
       return next;
     });
+
+  const isPaid    = order.paymentStatus === 'paid';
+  const isPending = order.orderStatus === 'pending';
+  const shippingFee = order.shipping.fee ?? 0;
+  const grandTotal  = order.payment.total + shippingFee;
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-4">
@@ -143,17 +200,25 @@ export default function OrderDetailPage() {
             ←
           </button>
           <span className="font-semibold text-gray-800">{order.code}</span>
-          <StatusBadge type="paid" />
-          <StatusBadge type="processed" />
-          <StatusBadge type="archived" />
+          <StatusBadge status={order.paymentStatus} />
+          <StatusBadge status={order.orderStatus} />
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate(ROUTES.ORDER_RETURN.replace(':id', orderId))}
-            className="text-sm border border-gray-200 rounded-md px-3 py-1.5 hover:bg-gray-50 flex items-center gap-1.5"
-          >
-            🔄 Đổi trả hàng
-          </button>
+          {isPending ? (
+            <button
+              onClick={() => navigate(`/orders/${orderId}/edit`)}
+              className="text-sm border border-gray-200 rounded-md px-3 py-1.5 hover:bg-gray-50 flex items-center gap-1.5"
+            >
+              ✎ Sửa đơn
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate(ROUTES.ORDER_RETURN.replace(':id', orderId))}
+              className="text-sm border border-gray-200 rounded-md px-3 py-1.5 hover:bg-gray-50 flex items-center gap-1.5"
+            >
+              🔄 Đổi trả hàng
+            </button>
+          )}
           <button className="text-sm border border-gray-200 rounded-md px-3 py-1.5 hover:bg-gray-50 flex items-center gap-1.5">
             🖨 In đơn hàng
           </button>
@@ -167,20 +232,18 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
-      {/* Order timeline */}
+      {/* Timeline */}
       <SectionCard>
         <div className="px-6 py-4 flex items-center">
-          {TIMELINE_STEPS.map((step, i) => (
+          {order.timeline.map((step, i) => (
             <div key={step.key} className="flex items-center flex-1 last:flex-none">
               <div className="flex flex-col items-center">
                 <div className={`w-3.5 h-3.5 rounded-full border-2 ${step.done ? 'bg-green-500 border-green-500' : 'bg-white border-gray-300'}`} />
-                <p className={`text-xs mt-1.5 font-medium ${step.done ? 'text-gray-700' : 'text-gray-400'}`}>
-                  {step.label}
-                </p>
+                <p className={`text-xs mt-1.5 font-medium ${step.done ? 'text-gray-700' : 'text-gray-400'}`}>{step.label}</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">{step.time ?? ''}</p>
               </div>
-              {i < TIMELINE_STEPS.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-2 mb-6 ${step.done && TIMELINE_STEPS[i + 1].done ? 'bg-green-500' : 'border-t-2 border-dashed border-gray-300'}`} />
+              {i < order.timeline.length - 1 && (
+                <div className={`flex-1 h-0.5 mx-2 mb-6 ${step.done && order.timeline[i + 1].done ? 'bg-green-500' : 'border-t-2 border-dashed border-gray-300'}`} />
               )}
             </div>
           ))}
@@ -192,28 +255,44 @@ export default function OrderDetailPage() {
         {/* Left column */}
         <div className="flex-1 space-y-4 min-w-0">
 
-          {/* Shipping section */}
+          {/* Processing / Shipping card */}
           <SectionCard>
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-green-50">
-              <span className="text-green-500 text-lg">✅</span>
-              <span className="font-medium text-green-700">Đã xử lý giao hàng</span>
-            </div>
+            {isPending ? (
+              /* Chưa xử lý */
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <PendingIcon />
+                  <span className="font-medium text-gray-800">Chưa xử lý</span>
+                </div>
+                <button className="text-gray-400 hover:text-gray-600">···</button>
+              </div>
+            ) : (
+              /* Đã xử lý */
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-green-50">
+                <span className="text-green-500 text-lg">✅</span>
+                <span className="font-medium text-green-700">Đã xử lý giao hàng</span>
+              </div>
+            )}
+
             <div className="p-4 space-y-1.5 text-sm">
               <div className="flex gap-2">
                 <span className="text-gray-500 w-28 shrink-0">Chi nhánh:</span>
                 <span className="text-gray-700">{order.shipping.branch}</span>
               </div>
-              <div className="flex gap-2">
-                <span className="text-gray-500 w-28 shrink-0">Vận chuyển:</span>
-                <span className="text-gray-700">{order.shipping.method}</span>
-              </div>
-              <div className="flex gap-2">
-                <span className="text-gray-500 w-28 shrink-0">Ngày xuất hàng:</span>
-                <span className="text-gray-700">{order.shipping.exportDate}</span>
-              </div>
+              {!isPending && order.shipping.method && (
+                <div className="flex gap-2">
+                  <span className="text-gray-500 w-28 shrink-0">Vận chuyển:</span>
+                  <span className="text-gray-700">{order.shipping.method}</span>
+                </div>
+              )}
+              {!isPending && order.shipping.exportDate && (
+                <div className="flex gap-2">
+                  <span className="text-gray-500 w-28 shrink-0">Ngày xuất hàng:</span>
+                  <span className="text-gray-700">{order.shipping.exportDate}</span>
+                </div>
+              )}
             </div>
 
-            {/* Products table */}
             <table className="w-full text-sm border-t border-gray-100">
               <thead>
                 <tr className="text-gray-500 text-xs bg-gray-50">
@@ -243,17 +322,36 @@ export default function OrderDetailPage() {
                 ))}
               </tbody>
             </table>
-            <div className="px-4 py-2 border-t border-gray-100">
+
+            <div className="px-4 py-2 border-t border-gray-100 flex items-center justify-between">
               <button className="text-sm text-blue-500 hover:text-blue-600">Thêm ghi chú</button>
+              {isPending && (
+                <div className="flex gap-2">
+                  <button className="text-sm border border-gray-200 rounded-md px-3 py-1.5 hover:bg-gray-50">
+                    Xác nhận giao hàng
+                  </button>
+                  <button className="text-sm bg-blue-600 text-white rounded-md px-3 py-1.5 hover:bg-blue-700 font-medium">
+                    Đẩy vận chuyển
+                  </button>
+                </div>
+              )}
             </div>
           </SectionCard>
 
-          {/* Payment section */}
+          {/* Payment card */}
           <SectionCard>
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-green-50">
-              <span className="text-green-500 text-lg">✅</span>
-              <span className="font-medium text-green-700">Đã thanh toán</span>
-            </div>
+            {isPaid ? (
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-green-50">
+                <span className="text-green-500 text-lg">✅</span>
+                <span className="font-medium text-green-700">Đã thanh toán</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+                <PendingIcon />
+                <span className="font-medium text-gray-800">Chưa thanh toán</span>
+              </div>
+            )}
+
             <div className="p-4 space-y-3 text-sm">
               <div className="flex items-center justify-between">
                 <div className="text-gray-500">
@@ -262,18 +360,46 @@ export default function OrderDetailPage() {
                 </div>
                 <span className="font-medium">{order.payment.total.toLocaleString('vi-VN')}đ</span>
               </div>
+
+              {shippingFee > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="text-gray-500">
+                    Phí giao hàng
+                    {order.shipping.method && <span className="ml-2 text-gray-400">{order.shipping.method}</span>}
+                  </div>
+                  <span className="font-medium">{shippingFee.toLocaleString('vi-VN')}đ</span>
+                </div>
+              )}
+
               <div className="flex items-center justify-between font-semibold border-t border-gray-100 pt-3">
                 <span>Thành tiền</span>
-                <span>{order.payment.total.toLocaleString('vi-VN')}đ</span>
+                <span>{grandTotal.toLocaleString('vi-VN')}đ</span>
               </div>
-              <div className="flex items-center justify-between text-gray-500 border-t border-gray-100 pt-3">
-                <div>
-                  Khách đã trả
-                  <span className="ml-2 text-gray-400">{order.payment.method}</span>
+
+              {isPaid && order.payment.method && (
+                <div className="flex items-center justify-between text-gray-500 border-t border-gray-100 pt-3">
+                  <div>
+                    Khách đã trả
+                    <span className="ml-2 text-gray-400">{order.payment.method}</span>
+                  </div>
+                  <span>{(order.payment.paid ?? 0).toLocaleString('vi-VN')}đ</span>
                 </div>
-                <span>{order.payment.paid.toLocaleString('vi-VN')}đ</span>
-              </div>
+              )}
             </div>
+
+            {!isPaid && (
+              <div className="px-4 py-3 border-t border-gray-100 flex justify-end gap-2">
+                <button
+                  onClick={() => setQrModalOpen(true)}
+                  className="text-sm border border-gray-200 rounded-md px-3 py-1.5 hover:bg-gray-50"
+                >
+                  Lấy mã QR
+                </button>
+                <button className="text-sm bg-blue-600 text-white rounded-md px-3 py-1.5 hover:bg-blue-700 font-medium">
+                  Nhận tiền
+                </button>
+              </div>
+            )}
           </SectionCard>
 
           {/* E-invoice */}
@@ -283,10 +409,7 @@ export default function OrderDetailPage() {
                 <span className="text-yellow-500">⏳</span>
                 <span className="font-medium text-yellow-700">Chưa yêu cầu hóa đơn điện tử</span>
               </div>
-              <button
-                onClick={() => setInvoiceModalOpen(true)}
-                className="text-sm text-blue-500 hover:underline"
-              >
+              <button onClick={() => setInvoiceModalOpen(true)} className="text-sm text-blue-500 hover:underline">
                 Yêu cầu hóa đơn
               </button>
             </div>
@@ -303,7 +426,6 @@ export default function OrderDetailPage() {
             <div className="p-4">
               <p className="text-xs text-gray-400 mb-3">03/06/2026</p>
               <div className="relative">
-                {/* Vertical line */}
                 <div className="absolute left-[5px] top-2 bottom-2 w-px bg-blue-200" />
                 <div className="space-y-3">
                   {order.history.map((item, i) => (
@@ -340,17 +462,17 @@ export default function OrderDetailPage() {
           {/* Nguồn đơn */}
           <SidebarSection title="Nguồn đơn">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded bg-orange-400 flex items-center justify-center text-white text-xs font-bold">
-                A
+              <div className={`w-7 h-7 rounded flex items-center justify-center text-white text-xs font-bold ${order.source.color}`}>
+                {order.source.label === 'Website' ? '🌐' : order.source.label[0]}
               </div>
-              <span className="text-sm font-medium text-gray-700">{order.source}</span>
+              <span className="text-sm font-medium text-gray-700">{order.source.label}</span>
             </div>
           </SidebarSection>
 
           {/* Khách hàng */}
           <SidebarSection title="Khách hàng">
             <div className="space-y-3 text-sm">
-              <Link to={`/customers/1`} className="text-blue-600 hover:underline font-medium">
+              <Link to="/customers/1" className="text-blue-600 hover:underline font-medium">
                 {order.customer.name}
               </Link>
               <div className="flex items-center justify-between text-gray-500">
@@ -368,7 +490,7 @@ export default function OrderDetailPage() {
 
           {/* Nhóm khách hàng */}
           <div className="bg-white rounded-lg border border-gray-200 px-4 py-3">
-            <p className="text-sm text-gray-500 font-medium mb-1">Nhóm khách hàng</p>
+            <p className="text-sm font-medium text-gray-800 mb-1">Nhóm khách hàng</p>
             <p className="text-sm text-gray-400">Không áp dụng nhóm khách hàng</p>
           </div>
 
@@ -376,7 +498,7 @@ export default function OrderDetailPage() {
           <SidebarSection title="Thông tin liên hệ" action={<EditIcon />}>
             <div className="space-y-1 text-sm">
               <p className="text-blue-500">{order.customer.email}</p>
-              <p className="text-gray-400">Không có số điện thoại</p>
+              <p className="text-gray-400">{order.customer.phone ?? 'Không có số điện thoại'}</p>
             </div>
           </SidebarSection>
 
@@ -384,10 +506,8 @@ export default function OrderDetailPage() {
           <SidebarSection title="Địa chỉ giao hàng" action={<EditIcon />}>
             <div className="space-y-1 text-sm text-gray-700">
               <p className="font-medium">{order.customer.address.name}</p>
-              <p>{order.customer.address.phone}</p>
-              {showAllAddress
-                ? <p>{order.customer.address.detail}</p>
-                : <p className="line-clamp-2">{order.customer.address.detail}</p>}
+              {order.customer.address.phone && <p>{order.customer.address.phone}</p>}
+              <p className={!showAllAddress ? 'line-clamp-2' : ''}>{order.customer.address.detail}</p>
               <button
                 onClick={() => setShowAllAddress((v) => !v)}
                 className="text-blue-500 hover:underline text-xs mt-1 flex items-center gap-1"
@@ -399,10 +519,20 @@ export default function OrderDetailPage() {
 
           {/* Ghi chú */}
           <SidebarSection title="Ghi chú" action={<EditIcon />}>
-            <p className="text-sm text-gray-400">
-              {order.note ?? 'Chưa có ghi chú'}
-            </p>
+            <p className="text-sm text-gray-400">{order.note ?? 'Chưa có ghi chú'}</p>
           </SidebarSection>
+
+          {/* Chuyển đổi đơn hàng */}
+          {order.conversion && (
+            <SidebarSection title="Chuyển đổi đơn hàng">
+              <div className="text-sm space-y-1">
+                <p className="text-gray-500">Trang</p>
+                <a href={order.conversion.page} className="text-blue-500 hover:underline break-all">
+                  {order.conversion.page}
+                </a>
+              </div>
+            </SidebarSection>
+          )}
 
           {/* Thông tin bổ sung */}
           <SidebarSection title="Thông tin bổ sung">
@@ -414,7 +544,9 @@ export default function OrderDetailPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 mb-0.5">Nhân viên phụ trách</p>
-                  <p className="text-gray-700">{order.additionalInfo.staff}</p>
+                  <p className="text-gray-700">
+                    {order.additionalInfo.staff ?? 'Chưa có nhân viên phụ trách'}
+                  </p>
                 </div>
                 <EditIcon />
               </div>
@@ -423,9 +555,15 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
+      <QRPaymentModal
+        open={qrModalOpen}
+        amount={grandTotal}
+        onClose={() => setQrModalOpen(false)}
+      />
+
       <InvoiceModal
         open={invoiceModalOpen}
-        initialBuyerName={order.customer.name ?? ''}
+        initialBuyerName={order.customer.name}
         initialEmail={order.customer.email}
         onClose={() => setInvoiceModalOpen(false)}
         onConfirm={(form) => console.log('Invoice submitted:', form)}

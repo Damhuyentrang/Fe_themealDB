@@ -187,15 +187,14 @@ export default function InventoryFilterDrawer({ open, onClose, onApply, initialF
             <RangeInputs fromVal={f.dangDongGoiMin} toVal={f.dangDongGoiMax} onFromChange={(v) => setStr('dangDongGoiMin', v)} onToChange={(v) => setStr('dangDongGoiMax', v)} />
           </Section>
 
-          <Section title="Quản lý lô - HSD" open={!!sections['quanLyLo']} onToggle={() => toggle('quanLyLo')} hasValue={f.quanLyLo.length > 0}>
-            <CheckGroup options={['Có', 'Không']} selected={f.quanLyLo} onChange={(v) => setArr('quanLyLo', v)} />
-          </Section>
+          
+
 
           <Section title="Loại sản phẩm" open={!!sections['loaiSp']} onToggle={() => toggle('loaiSp')} hasValue={f.loaiSanPham.length > 0}>
             <CheckGroup options={LOAI_SP_OPTIONS} selected={f.loaiSanPham} onChange={(v) => setArr('loaiSanPham', v)} />
           </Section>
 
-          <Section title="Nhãn hiệu" open={!!sections['nhanHieu']} onToggle={() => toggle('nhanHieu')} hasValue={f.nhanHieu.length > 0}>
+          <Section title="Danh mục" open={!!sections['nhanHieu']} onToggle={() => toggle('nhanHieu')} hasValue={f.nhanHieu.length > 0}>
             <CheckGroup options={NHAN_HIEU_OPTIONS} selected={f.nhanHieu} onChange={(v) => setArr('nhanHieu', v)} />
           </Section>
 
