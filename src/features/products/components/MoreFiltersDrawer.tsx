@@ -6,14 +6,12 @@ interface FilterOption {
 }
 
 const FILTER_OPTIONS: FilterOption[] = [
-  { key: 'brand', label: 'Nhãn hiệu' },
   { key: 'createdAt', label: 'Ngày tạo' },
   { key: 'channel', label: 'Kênh bán hàng' },
   { key: 'priceBranch', label: 'Bảng giá theo chi nhánh' },
   { key: 'priceGroup', label: 'Bảng giá theo nhóm khách hàng' },
   { key: 'category', label: 'Danh mục' },
   { key: 'productType', label: 'Loại sản phẩm' },
-  { key: 'taxGroup', label: 'Nhóm ngành nghề tính thuế GTGT, TNCN' },
   { key: 'tag', label: 'Tag' },
   { key: 'productForm', label: 'Hình thức sản phẩm' },
   { key: 'batchProduct', label: 'Sản phẩm lô - HSD' },

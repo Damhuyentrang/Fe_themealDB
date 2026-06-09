@@ -28,6 +28,7 @@ import CreateSupplierPage from '../features/inventory/pages/CreateSupplierPage';
 import PurchaseReturnListPage from '../features/inventory/pages/PurchaseReturnListPage';
 import PromotionsPage from '../features/promotions/pages/PromotionsPage';
 import PriceListPage from '../features/products/pages/PriceListPage';
+import ProductDetailPage from '../features/products/pages/ProductDetailPage';
 import CustomerListPage from '../features/customers/pages/CustomerListPage';
 import CustomerGroupsPage from '../features/customers/pages/CustomerGroupsPage';
 import ShippingOverviewPage from '../features/shipping/pages/ShippingOverviewPage';
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
       // Products
       { path: ROUTES.PRODUCTS, element: <ProductListPage /> },
       { path: ROUTES.PRODUCT_CREATE, element: <CreateProductPage /> },
+      { path: ROUTES.PRODUCT_DETAIL, element: <ProductDetailPage /> },
       { path: ROUTES.PRODUCT_CATEGORIES, element: <ProductCategoriesPage /> },
       { path: '/products/categories/create', element: <CreateCategoryPage /> },
       { path: ROUTES.PRICE_LISTS, element: <PriceListPage /> },

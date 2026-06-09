@@ -47,9 +47,7 @@ export default function CreateProductPage() {
 
   // Categorization
   const [category, setCategory] = useState('');
-  const [brand, setBrand] = useState('');
   const [productType, setProductType] = useState('');
-  const [taxGroup, setTaxGroup] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>(['Nhẫn']);
   const [theme, setTheme] = useState('product');
@@ -513,18 +511,6 @@ export default function CreateProductPage() {
               </div>
             </section>
 
-            {/* Nhãn hiệu */}
-            <section className="bg-white rounded-lg border border-gray-200 p-4 space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Nhãn hiệu</label>
-              <select
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm outline-none focus:border-blue-400"
-              >
-                <option value="">Chọn nhãn hiệu</option>
-              </select>
-            </section>
-
             {/* Loại sản phẩm */}
             <section className="bg-white rounded-lg border border-gray-200 p-4 space-y-2">
               <label className="block text-sm font-medium text-gray-700">Loại sản phẩm</label>
@@ -534,18 +520,6 @@ export default function CreateProductPage() {
                 className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm outline-none focus:border-blue-400"
               >
                 <option value="">Chọn loại sản phẩm</option>
-              </select>
-            </section>
-
-            {/* Nhóm ngành nghề */}
-            <section className="bg-white rounded-lg border border-gray-200 p-4 space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Nhóm ngành nghề tính thuế GTGT, TNCN</label>
-              <select
-                value={taxGroup}
-                onChange={(e) => setTaxGroup(e.target.value)}
-                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm outline-none focus:border-blue-400"
-              >
-                <option value="">Chọn nhóm ngành nghề</option>
               </select>
             </section>
 
