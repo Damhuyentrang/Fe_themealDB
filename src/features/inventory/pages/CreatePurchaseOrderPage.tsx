@@ -18,7 +18,6 @@ export default function CreatePurchaseOrderPage() {
   const [products, setProducts] = useState<OrderProduct[]>([]);
 
   const [supplierSearch, setSupplierSearch] = useState('');
-  const [branch, setBranch] = useState('Cửa hàng chính');
   const [assignee, setAssignee] = useState('Trang Đàm');
   const [expectedDate, setExpectedDate] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
@@ -267,18 +266,6 @@ export default function CreatePurchaseOrderPage() {
                   className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md outline-none focus:border-blue-400"
                 />
               </div>
-            </section>
-
-            {/* Chi nhánh nhập */}
-            <section className="bg-white rounded-lg border border-gray-200 p-4 space-y-2">
-              <h2 className="font-semibold text-gray-800 text-sm">Chi nhánh nhập</h2>
-              <select
-                value={branch}
-                onChange={(e) => setBranch(e.target.value)}
-                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm outline-none focus:border-blue-400"
-              >
-                <option>Cửa hàng chính</option>
-              </select>
             </section>
 
             {/* Thông tin bổ sung */}

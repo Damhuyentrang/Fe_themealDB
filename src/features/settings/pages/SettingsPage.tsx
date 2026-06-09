@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 /* ─── Left nav config ─── */
 const NAV_ITEMS = [
   { key: 'general',       label: 'Cấu hình chung',         icon: '⚙' },
-  { key: 'branches',      label: 'Quản lý chi nhánh',       icon: '🏪' },
   { key: 'order-process', label: 'Xử lý đơn hàng',          icon: '📋' },
   { key: 'payment',       label: 'Phương thức thanh toán',   icon: '💳' },
   { key: 'checkout',      label: 'Trang thanh toán',         icon: '🛒' },

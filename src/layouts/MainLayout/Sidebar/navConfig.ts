@@ -48,7 +48,6 @@ export const NAV_CONFIG: NavGroup[] = [
         icon: 'warehouse',
         children: [
           { label: 'Tồn kho',        path: ROUTES.INVENTORY },
-          { label: 'Đặt hàng nhập',  path: '/inventory/purchase-orders/draft' },
           { label: 'Nhập hàng',      path: ROUTES.PURCHASE_ORDERS },
           { label: 'Trả hàng nhập',  path: '/inventory/return-orders' },
           
